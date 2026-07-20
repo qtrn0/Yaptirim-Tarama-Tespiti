@@ -1,0 +1,72 @@
+{
+  "info": {
+    "name": "Yaptırım Tarama Tespiti API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "value",
+        "value": "demo-key-2026",
+        "type": "string"
+      },
+      {
+        "key": "key",
+        "value": "X-API-Key",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8000/health"
+      }
+    },
+    {
+      "name": "Tekil Tarama - Yaptırım",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/screen",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"isim\": \"Vladimir Putin\",\n  \"kategori\": \"yaptirim\",\n  \"listeler\": [\"OFAC SDN\", \"BM\", \"Interpol\"],\n  \"esik\": 75\n}"
+        }
+      }
+    },
+    {
+      "name": "Tekil Tarama - PEP",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/screen",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"isim\": \"Recep Tayyip Erdoğan\",\n  \"kategori\": \"pep\",\n  \"listeler\": [\"TBMM\", \"Wikidata PEP\"],\n  \"esik\": 80\n}"
+        }
+      }
+    },
+    {
+      "name": "Toplu Tarama",
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/screen/batch",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"isimler\": [\"Vladimir Putin\", \"Mehmet Yılmaz\", \"Ali Khamenei\"],\n  \"listeler\": [\"OFAC SDN\", \"BM\"],\n  \"esik\": 75\n}"
+        }
+      }
+    }
+  ]
+}

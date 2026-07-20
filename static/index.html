@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yaptırım Tarama Tespiti | RegTech API</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #06080d;
+            --bg-card: #0b0f17;
+            --bg-card-hover: #111827;
+            --border: #1a2030;
+            --border-active: #2a3a50;
+            --text: #e5e7eb;
+            --text-secondary: #9ca3af;
+            --text-muted: #4b5563;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --accent-glow: rgba(99,102,241,0.2);
+            --red: #ef4444;
+            --red-bg: rgba(239,68,68,0.1);
+            --yellow: #f59e0b;
+            --yellow-bg: rgba(245,158,11,0.1);
+            --green: #10b981;
+            --green-bg: rgba(16,185,129,0.1);
+            --pep-high: #93c5fd;
+            --pep-medium: #60a5fa;
+            --pep-low: #3b82f6;
+            --pep-high-bg: rgba(147,197,253,0.15);
+            --pep-medium-bg: rgba(96,165,250,0.15);
+            --pep-low-bg: rgba(59,130,246,0.15);
+            --radius-sm: 8px;
+            --radius: 12px;
+            --radius-lg: 18px;
+            --shadow: 0 2px 8px rgba(0,0,0,0.4), 0 0 1px rgba(255,255,255,0.05);
+            --shadow-lg: 0 4px 24px rgba(0,0,0,0.6);
+            --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(99,102,241,0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(16,185,129,0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .grid-bg {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+            background-size: 64px 64px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .app {
+            position: relative;
+            z-index: 1;
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 48px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 0 32px var(--accent-glow);
+        }
+
+        .logo-text h1 {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--text), #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text span {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 10px 18px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .status-badge .pulse {
+            width: 8px;
+            height: 8px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+            50% { opacity: 0.6; box-shadow: 0 0 0 8px rgba(16,185,129,0); }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+        }
+
+        .stat-card:hover { border-color: var(--border-active); box-shadow: var(--shadow); }
+        .stat-card .stat-icon { font-size: 18px; margin-bottom: 8px; }
+        .stat-card .stat-value { font-size: 26px; font-weight: 800; letter-spacing: -1px; }
+        .stat-card .stat-label { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+        .disclaimer-banner {
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.25);
+            border-radius: var(--radius);
+            padding: 14px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .disclaimer-banner .disclaimer-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+        .disclaimer-banner .disclaimer-text { font-size: 12px; color: var(--text-secondary); line-height: 1.7; }
+        .disclaimer-banner .disclaimer-text strong { color: var(--red); }
+
+        .search-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            margin-bottom: 32px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+
+        .search-section::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 20px; right: 20px; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0.3;
+        }
+
+        .search-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 14px;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .search-input-wrapper { flex: 1; position: relative; }
+
+        .search-input-wrapper .prefix {
+            position: absolute;
+            left: 16px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--accent);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .search-input {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 15px 16px 15px 44px;
+            color: var(--text);
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(99,102,241,0.1);
+        }
+
+        .search-input::placeholder { color: var(--text-muted); }
+
+        .category-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .category-card {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 100px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid var(--border);
+            background: var(--bg);
+            color: var(--text-muted);
+            user-select: none;
+        }
+
+        .category-card.active {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+            color: var(--text);
+        }
+
+        .db-selector {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .db-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text-muted);
+            user-select: none;
+            position: relative;
+        }
+
+        .db-chip:hover { border-color: var(--border-active); color: var(--text); }
+        .db-chip.active { color: var(--text); }
+
+        .db-chip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card);
+            border: 1px solid var(--border-active);
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 11px;
+            color: var(--text);
+            white-space: nowrap;
+            z-index: 100;
+            pointer-events: none;
+            font-weight: 500;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .db-chip.masak.active { border-color: #ef4444; background: rgba(239,68,68,0.15); }
+        .db-chip.ofac.active { border-color: #f59e0b; background: rgba(245,158,11,0.15); }
+        .db-chip.bm.active { border-color: #3b82f6; background: rgba(59,130,246,0.15); }
+        .db-chip.interpol.active { border-color: #8b5cf6; background: rgba(139,92,246,0.15); }
+        .db-chip.tbmm.active { border-color: #06b6d4; background: rgba(6,182,212,0.15); }
+        .db-chip.cia.active { border-color: #64748b; background: rgba(100,116,139,0.15); }
+        .db-chip.teror.active { border-color: #ef4444; background: rgba(239,68,68,0.15); }
+        .db-chip.pep.active { border-color: #06b6d4; background: rgba(6,182,212,0.15); }
+        .db-chip.eu.active { border-color: #3b82f6; background: rgba(59,130,246,0.15); }
+        .db-chip.uk.active { border-color: #6366f1; background: rgba(99,102,241,0.15); }
+
+        .db-chip .chip-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .db-chip .chip-dot.masak { background: #ef4444; }
+        .db-chip .chip-dot.ofac { background: #f59e0b; }
+        .db-chip .chip-dot.bm { background: #3b82f6; }
+        .db-chip .chip-dot.interpol { background: #8b5cf6; }
+        .db-chip .chip-dot.tbmm { background: #06b6d4; }
+        .db-chip .chip-dot.cia { background: #64748b; }
+        .db-chip .chip-dot.teror { background: #ef4444; }
+        .db-chip .chip-dot.pep { background: #06b6d4; }
+        .db-chip .chip-dot.eu { background: #3b82f6; }
+        .db-chip .chip-dot.uk { background: #6366f1; }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 15px 28px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 0 28px var(--accent-glow); transform: translateY(-1px); }
+        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+        .btn-ghost:hover { background: var(--bg-card-hover); color: var(--text); border-color: var(--border-active); }
+        .btn-sm { padding: 6px 12px; font-size: 11px; border-radius: 6px; }
+
+        .results-container { margin-top: 8px; width: 100%; }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .results-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .results-count {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--text);
+        }
+
+        .summary-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-weight: 700;
+            font-size: 12px;
+        }
+        .summary-pill.high { background: var(--red-bg); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+        .summary-pill.medium { background: var(--yellow-bg); color: var(--yellow); border: 1px solid rgba(245,158,11,0.3); }
+        .summary-pill.clean { background: var(--green-bg); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
+
+        .risk-score-section {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 24px;
+            padding: 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            flex-wrap: wrap;
+        }
+
+        .score-ring-container { position: relative; width: 110px; height: 110px; flex-shrink: 0; }
+        .score-ring {
+            width: 110px; height: 110px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px; font-weight: 900;
+            position: relative;
+            border: 3px solid var(--ring-color);
+            color: var(--ring-color);
+        }
+
+        .score-details { flex: 1; min-width: 200px; }
+        .score-details h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+        .score-details p { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+
+        .score-meta { display: flex; gap: 20px; margin-top: 12px; flex-wrap: wrap; }
+        .score-meta-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
+        .score-meta-item strong { color: var(--text); }
+
+        .result-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 22px 24px;
+            margin-bottom: 10px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .result-card::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 4px;
+        }
+
+        .result-card.high::before { background: var(--red); }
+        .result-card.medium::before { background: var(--yellow); }
+        .result-card.clean::before { background: var(--green); }
+        .result-card.pep-high::before { background: var(--pep-high); }
+        .result-card.pep-medium::before { background: var(--pep-medium); }
+        .result-card.pep-low::before { background: var(--pep-low); }
+        .result-card:hover { border-color: var(--border-active); box-shadow: var(--shadow); }
+
+        .result-card .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .result-card .card-header .name { font-size: 17px; font-weight: 600; }
+
+        .risk-tag {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .risk-tag.high { background: var(--red-bg); color: var(--red); }
+        .risk-tag.medium { background: var(--yellow-bg); color: var(--yellow); }
+        .risk-tag.low { background: var(--green-bg); color: var(--green); }
+        .risk-tag.pep-high { background: var(--pep-high-bg); color: var(--pep-high); }
+        .risk-tag.pep-medium { background: var(--pep-medium-bg); color: var(--pep-medium); }
+        .risk-tag.pep-low { background: var(--pep-low-bg); color: var(--pep-low); }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 8px;
+        }
+
+        .meta-item {
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+        }
+
+        .meta-item .meta-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .meta-item .meta-value { font-size: 13px; font-weight: 500; }
+
+        .source-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+            width: 100%;
+        }
+
+        .source-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px 16px;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .source-card:hover { border-color: var(--border-active); }
+        .source-card .source-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+        .source-card .source-count { font-size: 28px; font-weight: 800; }
+        .source-card .source-status { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 4px;
+            width: fit-content;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: var(--transition);
+            border: none;
+            background: transparent;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .tab.active { background: var(--accent); color: white; }
+        .tab:hover:not(.active) { color: var(--text); }
+        
+        #filteredResults { width: 100%; }
+
+        .loading-overlay { text-align: center; padding: 60px 20px; }
+
+        .spinner {
+            width: 44px; height: 44px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .error-box {
+            background: var(--red-bg);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: var(--red);
+            padding: 14px 20px;
+            border-radius: var(--radius);
+            margin-bottom: 16px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 56px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer p { color: var(--text-muted); font-size: 11px; line-height: 1.8; }
+        .footer a { color: var(--text-secondary); text-decoration: none; font-weight: 500; }
+        .footer a:hover { color: var(--text); }
+
+        .section-links {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .section-links a { text-decoration: none; }
+
+        .db-guide-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px;
+            transition: var(--transition);
+        }
+        .db-guide-card:hover { border-color: var(--border-active); box-shadow: var(--shadow); }
+        .db-guide-card .guide-icon { font-size: 28px; margin-bottom: 8px; }
+        .db-guide-card .guide-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+        .db-guide-card .guide-count { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+        .db-guide-card .guide-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+
+        @media (max-width: 640px) {
+            .app { padding: 24px 12px; }
+            .header { flex-direction: column; align-items: flex-start; }
+            .search-row { flex-direction: column; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    <div class="app">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">🛡️</div>
+                <div class="logo-text">
+                    <h1>Yaptırım Tarama Tespiti</h1>
+                    <span>MASAK • OFAC • BM • Interpol • TBMM • CIA WORLD LEADERS • TERÖR ARANANLAR</span>
+                </div>
+            </div>
+            <div class="status-badge">
+                <span class="pulse"></span> <span id="activeDbCount">12</span> Liste • <span id="totalRecords">340.000+</span> Kayıt
+            </div>
+        </header>
+
+        <div class="disclaimer-banner">
+            <div class="disclaimer-icon">⚠️</div>
+            <div class="disclaimer-text">
+                <strong>ÖNEMLİ YASAL UYARI:</strong> Bu uygulama <strong>sadece bir portfolyo/demo projesidir.</strong> Veritabanları <strong>güncel değildir, asla güncellenmeyecektir ve güncellik garantisi yoktur.</strong> 
+                Gerçek hayatta kullanıma uygun değildir. Ticari, hukuki ya da operasyonel hiçbir karar bu araca dayanarak alınamaz. 
+                Bu araç <strong>kesinlikle bir uyumluluk veya regülasyon çözümü değildir.</strong> 
+                Yazar, bu aracın kullanımından doğabilecek <strong>hiçbir zarardan, yanlış pozitif/negatif sonuçtan, veri güncelliği sorunundan sorumlu tutulamaz.</strong>
+                Bu projeyi kullanarak, tüm sorumluluğun size ait olduğunu kabul etmiş olursunuz. Daha fazla bilgi için sayfanın altındaki yasal metni okuyunuz.
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-value" id="statLists">12</div><div class="stat-label">Seçili Liste</div></div>
+            <div class="stat-card"><div class="stat-icon">👤</div><div class="stat-value" id="statRecords">340.000+</div><div class="stat-label">Taranan Kayıt</div></div>
+            <div class="stat-card"><div class="stat-icon">⚡</div><div class="stat-value" id="statSpeed">-</div><div class="stat-label">ms Yanıt</div></div>
+            <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-value" id="statAccuracy">-</div><div class="stat-label">En Yüksek Skor</div></div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
+            <button class="btn btn-ghost btn-sm" onclick="openDbGuide()">📚 Veritabanı Rehberi</button>
+        </div>
+
+        <div class="search-section">
+            <div class="search-label">Kişi veya Kuruluş Adı</div>
+            <div class="search-row">
+                <div class="search-input-wrapper">
+                    <span class="prefix">🔍</span>
+                    <input type="text" class="search-input" id="searchInput" placeholder="İsim, soyisim veya kuruluş adı yazın..." autofocus autocomplete="off" spellcheck="false">
+                </div>
+                <button class="btn btn-primary" id="searchBtn" onclick="search()"><span>🔍</span> Tara</button>
+                <button class="btn btn-ghost" onclick="clearAll()">✕</button>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+                <span style="font-size:11px; color:var(--text-muted);">EŞİK:</span>
+                <input type="range" id="esikSlider" min="70" max="100" value="75" style="flex:1; max-width:200px;" oninput="document.getElementById('esikValue').textContent='%'+this.value">
+                <span id="esikValue" style="font-size:13px; font-weight:700; color:var(--accent); min-width:40px;">%75</span>
+            </div>
+            <div class="search-label" style="margin-top:16px;">Arama Kategorisi</div>
+            <div class="category-row" id="categoryRow">
+                <div class="category-card active" data-category="yaptirim" onclick="toggleCategory(this)"><span>⛔</span> YAPTIRIM</div>
+                <div class="category-card" data-category="pep" onclick="toggleCategory(this)"><span>👤</span> PEP</div>
+            </div>
+
+            <div class="search-label" style="margin-top:16px;">Yaptırım Listeleri</div>
+            <div class="db-selector" id="yaptirimDbSelector">
+                <button class="btn btn-sm btn-ghost" onclick="selectAllInCategory('yaptirim')" style="margin-right:8px;">Tüm Yaptırım</button>
+                <div class="db-chip active" data-db="Masak" data-category="yaptirim" onclick="toggleDb(this)" data-tooltip="Türkiye'nin resmi terör ve yaptırım listesi • 1.435 kayıt (GÜNCEL DEĞİL)"><span class="chip-dot masak"></span> MASAK</div>
+                <div class="db-chip active" data-db="OFAC SDN" data-category="yaptirim" onclick="toggleDb(this)" data-tooltip="ABD Hazine Bakanlığı SDN listesi • 19.129 kayıt (GÜNCEL DEĞİL)"><span class="chip-dot ofac"></span> OFAC SDN</div>
+                <div class="db-chip active" data-db="OFAC Non-SDN" data-category="yaptirim" onclick="toggleDb(this)" data-tooltip="OFAC'ın SDN dışı konsolide yaptırımları • 673 kayıt (GÜNCEL DEĞİL)"><span class="chip-dot ofac"></span> OFAC Non-SDN</div>
+                <div class="db-chip active" data-db="BM" data-category="yaptirim" onclick="toggleDb(this)" data-tooltip="Birleşmiş Milletler Güvenlik Konseyi yaptırımları • 730 kayıt (GÜNCEL DEĞİL)"><span class="chip-dot bm"></span> BM</div>
+                <div class="db-chip active" data-db="AB" data-category="yaptirim" onclick="toggleDb(this)" data-tooltip="Avrupa Birliği Konseyi yaptırım listesi • 5.894 kayıt (GÜNCEL DEĞİL)"><span class="chip-dot eu"></span> AB</div>
+                <div class="db-chip active" data-db="Interpol" data-category="yaptirim" onclick="toggleDb(this)" data-tooltip="Interpol Kırmızı Bülten • 6.407 kayıt (GÜNCEL DEĞİL)"><span class="chip-dot interpol"></span> Interpol</div>
+                <div class="db-chip active" data-db="UK" data-category="yaptirim" onclick="toggleDb(this)" data-tooltip="İngiltere Hazinesi Finansal Yaptırımlar Ofisi • 5.006 kayıt (GÜNCEL DEĞİL)"><span class="chip-dot uk"></span> UK</div>
+                <div class="db-chip active" data-db="Icisleri Teror" data-category="yaptirim" onclick="toggleDb(this)" data-tooltip="Türkiye İçişleri Bakanlığı terör listesi • 2.605 kayıt (GÜNCEL DEĞİL)"><span class="chip-dot teror"></span> İçişleri Terör</div>
+                <div class="db-chip active" data-db="ABD Teror" data-category="yaptirim" onclick="toggleDb(this)" data-tooltip="ABD Dışişleri Bakanlığı Yabancı Terör Örgütleri • 94 kayıt (GÜNCEL DEĞİL)"><span class="chip-dot teror"></span> ABD Terör</div>
+            </div>
+
+            <div class="search-label" style="margin-top:16px;">PEP Listeleri</div>
+            <div class="db-selector" id="pepDbSelector">
+                <button class="btn btn-sm btn-ghost" onclick="selectAllInCategory('pep')" style="margin-right:8px;">Tüm PEP</button>
+                <div class="db-chip" data-db="CIA Liderler" data-category="pep" onclick="toggleDb(this)" data-tooltip="CIA Dünya Liderleri ve kabine üyeleri • 5.312 kayıt (GÜNCEL DEĞİL)"><span class="chip-dot pep"></span> CIA Liderler</div>
+                <div class="db-chip" data-db="TBMM" data-category="pep" onclick="toggleDb(this)" data-tooltip="Türkiye Büyük Millet Meclisi üyeleri • 592 kayıt (GÜNCEL DEĞİL)"><span class="chip-dot pep"></span> TBMM</div>
+                <div class="db-chip" data-db="Wikidata PEP" data-category="pep" onclick="toggleDb(this)" data-tooltip="Küresel Politik Nüfuz Sahibi Kişiler • 295.986 kayıt (GÜNCEL DEĞİL)"><span class="chip-dot pep"></span> Wikidata PEP</div>
+            </div>
+            
+            <div class="section-links">
+                <a href="/docs" target="_blank" class="btn btn-sm btn-ghost">📚 Swagger API</a>
+                <a href="/health" target="_blank" class="btn btn-sm btn-ghost">❤️ Health Check</a>
+                <a href="https://github.com/qtrn0/Yaptirim-Tarama-Tespiti" target="_blank" class="btn btn-sm btn-ghost">⭐ GitHub</a>
+            </div>
+        </div>
+
+        <div class="results-container" id="resultsContainer"></div>
+
+        <div class="footer">
+            <p><a href="https://github.com/qtrn0/Yaptirim-Tarama-Tespiti" target="_blank">GitHub</a> • <a href="/docs" target="_blank">API Docs</a> • <a href="/health" target="_blank">Health</a></p>
+            <p style="margin-top:12px; max-width:800px; margin-left:auto; margin-right:auto; line-height:1.9; font-size:10px; color:var(--text-muted);">
+                <strong style="color:var(--red);">YASAL UYARI VE SORUMLULUK REDDİ:</strong><br>
+                Bu yazılım ("Yaptırım Tarama Tespiti"), <strong>yalnızca bir portfolyo, demo ve eğitim projesidir.</strong> 
+                Herhangi bir ticari, hukuki, operasyonel ya da uyumluluk amacı taşımaz. 
+                Bu projede yer alan tüm veritabanları (MASAK, OFAC, BM, Interpol, AB, UK, CIA, TBMM, Wikidata vb.) <strong>güncel değildir, 
+                asla güncellenmeyecektir ve hiçbir güncellik garantisi sunmamaktadır.</strong> 
+                Bu veritabanlarındaki bilgiler yanlış, eksik veya güncelliğini yitirmiş olabilir.<br><br>
+                Bu yazılım <strong>kesinlikle bir uyumluluk (compliance), regülasyon, KYC (Müşterini Tanı), AML (Kara Para Aklamayı Önleme) 
+                veya herhangi bir yasal zorunluluk çözümü değildir.</strong> Gerçek hayatta kullanıma uygun değildir. 
+                Ticari, hukuki ya da operasyonel hiçbir karar bu araca dayanarak alınamaz.<br><br>
+                Bu yazılımın yazarı ("Ben"), bu aracın kullanımından doğabilecek <strong>hiçbir doğrudan, dolaylı, arızi, özel veya sonuç olarak 
+                ortaya çıkan zarardan, yanlış pozitif (false positive) veya yanlış negatif (false negative) sonuçtan, 
+                veri güncelliği veya doğruluğu sorunundan, itibar kaybından, maddi/manevi zarardan, yasal yaptırımdan 
+                veya üçüncü kişilerin uğrayabileceği herhangi bir zarardan sorumlu tutulamaz.</strong><br><br>
+                Bu projeyi kullanarak, tüm riskin ve sorumluluğun tamamen size ait olduğunu, yazarın hiçbir sorumluluk kabul etmediğini 
+                peşinen kabul etmiş olursunuz. Bu yazılım "olduğu gibi" (as-is) sunulmaktadır, hiçbir açık veya zımni garanti verilmemektedir.<br><br>
+                <strong>Finansal bir gelir elde etme amacım yoktur. Bu proje sadece GitHub portfolyosunda sergilenmek üzere oluşturulmuştur.</strong>
+            </p>
+        </div>
+    </div>
+
+    <div id="dbGuideModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:1000; overflow-y:auto; padding:40px 20px;" onclick="if(event.target===this) closeDbGuide()">
+        <div style="max-width:900px; margin:0 auto; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:32px; position:relative;">
+            <button onclick="closeDbGuide()" style="position:absolute; top:16px; right:16px; background:transparent; border:none; color:var(--text-muted); font-size:24px; cursor:pointer;">✕</button>
+            <h2 style="font-size:22px; font-weight:800; margin-bottom:8px;">📚 Veritabanı Rehberi</h2>
+            <p style="color:var(--text-secondary); margin-bottom:8px;">Bu uygulamada taranan 12 veritabanının açıklamaları. Toplam <strong>300.000+</strong> kayıt.</p>
+            <p style="color:var(--red); font-size:11px; margin-bottom:24px; background:var(--red-bg); padding:8px 14px; border-radius:var(--radius-sm);">⚠️ Bu veritabanları <strong>GÜNCEL DEĞİLDİR</strong> ve asla güncellenmeyecektir. Sadece demo amaçlıdır.</p>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:16px;" id="dbGuideGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8000/screen';
+        const API_KEY = 'demo-key-2026';
+        let activeCategories = ['yaptirim'];
+        let selectedDbs = ['Masak', 'OFAC SDN', 'OFAC Non-SDN', 'BM', 'AB', 'Interpol', 'UK', 'Icisleri Teror', 'ABD Teror'];
+
+        const dbGuideData = {
+            'Masak': { icon: '🇹🇷', name: 'MASAK', count: '1.435', color: '#ef4444', desc: 'Türkiye Cumhuriyeti Mali Suçları Araştırma Kurulu. Terör ve yaptırım listelerini yayınlar. Türkiye\'deki tüm finans kurumları bu listeyi taramak zorundadır. (GÜNCEL DEĞİL)' },
+            'OFAC SDN': { icon: '🇺🇸', name: 'OFAC SDN', count: '19.129', color: '#f59e0b', desc: 'ABD Hazine Bakanlığı Yabancı Varlıkların Kontrolü Ofisi. Specially Designated Nationals (SDN) listesi. Dünyanın en kapsamlı yaptırım listesidir. (GÜNCEL DEĞİL)' },
+            'OFAC Non-SDN': { icon: '🇺🇸', name: 'OFAC Non-SDN', count: '673', color: '#f59e0b', desc: 'OFAC\'ın SDN dışındaki konsolide yaptırım listeleri. Sektörel yaptırımlar ve diğer kısıtlamaları içerir. (GÜNCEL DEĞİL)' },
+            'BM': { icon: '🇺🇳', name: 'BM Güvenlik Konseyi', count: '730', color: '#3b82f6', desc: 'Birleşmiş Milletler Güvenlik Konseyi yaptırım listesi. Tüm üye ülkelerin uymakla yükümlü olduğu uluslararası yaptırımlar. (GÜNCEL DEĞİL)' },
+            'AB': { icon: '🇪🇺', name: 'Avrupa Birliği', count: '5.894', color: '#3b82f6', desc: 'Avrupa Birliği Konseyi yaptırım listesi. AB üyesi ülkelerde faaliyet gösteren tüm kurumları bağlar. (GÜNCEL DEĞİL)' },
+            'Interpol': { icon: '🌍', name: 'Interpol Kırmızı Bülten', count: '6.407', color: '#8b5cf6', desc: 'Uluslararası Kriminal Polis Teşkilatı. Kırmızı Bülten, aranan suçluların iadesi için çıkarılan uluslararası yakalama emridir. (GÜNCEL DEĞİL)' },
+            'UK': { icon: '🇬🇧', name: 'UK HMT OFSI', count: '5.006', color: '#6366f1', desc: 'İngiltere Hazinesi Finansal Yaptırımlar Uygulama Ofisi. Birleşik Krallık\'ın bağımsız yaptırım listesidir. (GÜNCEL DEĞİL)' },
+            'Icisleri Teror': { icon: '🇹🇷', name: 'İçişleri Bakanlığı Terör', count: '2.605', color: '#ef4444', desc: 'Türkiye İçişleri Bakanlığı tarafından yayınlanan terör örgütü mensupları ve aranan kişiler listesi. (GÜNCEL DEĞİL)' },
+            'ABD Teror': { icon: '🇺🇸', name: 'ABD Terör Listesi', count: '94', color: '#ef4444', desc: 'ABD Dışişleri Bakanlığı Yabancı Terör Örgütleri (FTO) listesi. Terörle bağlantılı kişi ve kuruluşları içerir. (GÜNCEL DEĞİL)' },
+            'CIA Liderler': { icon: '🔵', name: 'CIA Dünya Liderleri', count: '5.312', color: '#3b82f6', desc: 'CIA tarafından yayınlanan dünya liderleri ve kabine üyeleri listesi. PEP taraması için temel referanstır. (GÜNCEL DEĞİL)' },
+            'TBMM': { icon: '🏛️', name: 'TBMM Milletvekilleri', count: '592', color: '#06b6d4', desc: 'Türkiye Büyük Millet Meclisi üyeleri. PEP (Politik Nüfuz Sahibi Kişi) taramasının Türkiye ayağıdır. (GÜNCEL DEĞİL)' },
+            'Wikidata PEP': { icon: '📊', name: 'Wikidata PEP', count: '295.986', color: '#06b6d4', desc: 'Wikidata üzerinden derlenmiş küresel Politik Nüfuz Sahibi Kişiler (PEP) veritabanı. En geniş PEP kaynağıdır. (GÜNCEL DEĞİL)' }
+        };
+
+        function openDbGuide() {
+            const grid = document.getElementById('dbGuideGrid');
+            let html = '';
+            for (const [key, data] of Object.entries(dbGuideData)) {
+                html += `<div class="db-guide-card"><div class="guide-icon">${data.icon}</div><div class="guide-name" style="color:${data.color}">${data.name}</div><div class="guide-count">${data.count} kayıt</div><div class="guide-desc">${data.desc}</div></div>`;
+            }
+            grid.innerHTML = html;
+            document.getElementById('dbGuideModal').style.display = 'block';
+        }
+
+        function closeDbGuide() { document.getElementById('dbGuideModal').style.display = 'none'; }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('http://127.0.0.1:8000/health');
+                const data = await response.json();
+                document.getElementById('activeDbCount').textContent = data.aktif_listeler.length;
+                document.getElementById('totalRecords').textContent = data.toplam_kayit.toLocaleString('tr-TR');
+                document.getElementById('statLists').textContent = selectedDbs.length;
+                document.getElementById('statRecords').textContent = data.toplam_kayit.toLocaleString('tr-TR');
+            } catch(e) { console.log('Health check başarısız'); }
+        });
+
+        document.getElementById('searchInput').addEventListener('keydown', function(e) { if (e.key === 'Enter') search(); });
+
+        function toggleCategory(card) {
+            const cat = card.dataset.category;
+            const otherCat = cat === 'yaptirim' ? 'pep' : 'yaptirim';
+            if (card.classList.contains('active')) return;
+            card.classList.add('active');
+            activeCategories = [cat];
+            document.querySelector(`.category-card[data-category="${otherCat}"]`).classList.remove('active');
+            document.querySelectorAll(`.db-chip[data-category="${otherCat}"]`).forEach(chip => chip.classList.remove('active'));
+            document.querySelectorAll(`.db-chip[data-category="${cat}"]`).forEach(chip => chip.classList.add('active'));
+            syncSelectedDbs(); updateStats();
+        }
+
+        function selectAllInCategory(cat) {
+            const otherCat = cat === 'yaptirim' ? 'pep' : 'yaptirim';
+            document.querySelector(`.category-card[data-category="${otherCat}"]`).classList.remove('active');
+            document.querySelectorAll(`.db-chip[data-category="${otherCat}"]`).forEach(chip => chip.classList.remove('active'));
+            document.querySelector(`.category-card[data-category="${cat}"]`).classList.add('active');
+            document.querySelectorAll(`.db-chip[data-category="${cat}"]`).forEach(chip => chip.classList.add('active'));
+            activeCategories = [cat];
+            syncSelectedDbs(); updateStats();
+        }
+
+        function syncSelectedDbs() {
+            selectedDbs = [];
+            document.querySelectorAll('.db-chip.active').forEach(chip => selectedDbs.push(chip.dataset.db));
+        }
+
+        function toggleDb(chip) {
+            chip.classList.contains('active') ? chip.classList.remove('active') : chip.classList.add('active');
+            syncSelectedDbs(); updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('statLists').textContent = selectedDbs.length;
+            document.getElementById('activeDbCount').textContent = selectedDbs.length;
+        }
+
+        async function search() {
+            const input = document.getElementById('searchInput');
+            const btn = document.getElementById('searchBtn');
+            const container = document.getElementById('resultsContainer');
+            const query = input.value.trim();
+            if (!query) return;
+            if (selectedDbs.length === 0) { container.innerHTML = '<div class="error-box">⚠️ Lütfen en az bir veritabanı seçin.</div>'; return; }
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner" style="width:16px;height:16px;border-width:2px;margin:0;"></span> Taranıyor...';
+            container.innerHTML = '<div class="loading-overlay"><div class="spinner"></div><p style="color:var(--text-muted);">Seçili listeler taranıyor...</p></div>';
+            const startTime = performance.now();
+            try {
+                const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-API-Key': API_KEY }, body: JSON.stringify({ isim: query, listeler: selectedDbs, esik: parseInt(document.getElementById('esikSlider').value) }) });
+                const elapsed = Math.round(performance.now() - startTime);
+                document.getElementById('statSpeed').textContent = elapsed;
+                const data = await response.json();
+                if (!response.ok) { container.innerHTML = `<div class="error-box">⚠️ ${data.detail || 'Sunucu hatası'}</div>`; return; }
+                renderResults(data, elapsed);
+            } catch (err) { container.innerHTML = '<div class="error-box">🔌 Bağlantı hatası. API sunucusu çalışmıyor olabilir.</div>'; }
+            finally { btn.disabled = false; btn.innerHTML = '<span>🔍</span> Tara'; }
+        }
+
+        function renderResults(data, elapsed) {
+            const container = document.getElementById('resultsContainer');
+            let html = '';
+            const riskLevel = data.genel_risk;
+            const riskClass = riskLevel.includes('YUKSEK') ? 'high' : riskLevel.includes('ORTA') ? 'medium' : 'clean';
+            const riskEmoji = riskLevel.includes('YUKSEK') ? '🔴' : riskLevel.includes('ORTA') ? '🟡' : '🟢';
+            const ringColor = riskLevel.includes('YUKSEK') ? 'var(--red)' : riskLevel.includes('ORTA') ? 'var(--yellow)' : 'var(--green)';
+            let maxScore = 0;
+            if (data.eslesmeler && data.eslesmeler.length > 0) { maxScore = Math.max(...data.eslesmeler.map(e => e.skor)); }
+            document.getElementById('statAccuracy').textContent = maxScore > 0 ? '%' + maxScore : '-';
+            html += `<div class="results-header"><div class="results-title">"${escapeHtml(data.aranan)}" sonuçları <span class="results-count">${data.toplam_eslesme} eşleşme</span></div><span class="summary-pill ${riskClass}">${riskEmoji} ${riskLevel}</span></div>`;
+            if (!data.eslesmeler || data.eslesmeler.length === 0) {
+                html += `<div class="risk-score-section"><div class="score-ring-container"><div class="score-ring" style="--ring-color:var(--green);">0</div></div><div class="score-details"><h3>✅ Temiz</h3><p>"${escapeHtml(data.aranan)}" ismi seçili listelerde bulunamadı.</p></div></div>`;
+            } else {
+                html += `<div class="risk-score-section"><div class="score-ring-container"><div class="score-ring" style="--ring-color:${ringColor};">${maxScore}</div></div><div class="score-details"><h3>${riskEmoji} ${riskLevel}</h3><p><strong>${data.toplam_eslesme}</strong> eşleşme, <strong>${data.yuksek_riskli_sayisi}</strong> yüksek eşleşme.</p><div class="score-meta"><div class="score-meta-item">⚡ <strong>${elapsed}ms</strong></div><div class="score-meta-item">📋 <strong>${data.taranan_listeler ? data.taranan_listeler.length : selectedDbs.length}</strong> liste tarandı</div></div></div>`;
+                const sourceCount = {};
+                data.eslesmeler.forEach(e => { sourceCount[e.kaynak] = (sourceCount[e.kaynak] || 0) + 1; });
+                html += '<div class="source-breakdown">';
+                const sourceColors = { 'Masak': '#dc2626', 'OFAC SDN': '#ea580c', 'OFAC Non-SDN': '#f59e0b', 'BM': '#2563eb', 'AB': '#7c3aed', 'Interpol': '#0891b2', 'UK': '#4f46e5', 'Icisleri Teror': '#e11d48', 'ABD Teror': '#b91c1c', 'CIA Liderler': '#0284c7', 'TBMM': '#0d9488', 'Wikidata PEP': '#06b6d4' };
+                const activeSources = data.taranan_listeler || selectedDbs;
+                activeSources.forEach(src => { const count = sourceCount[src] || 0; const color = sourceColors[src] || '#6b7280'; html += `<div class="source-card"><div class="source-name">${src}</div><div class="source-count" style="color:${color}">${count}</div><div class="source-status">eşleşme</div></div>`; });
+                html += '</div>';
+                const hasPEP = selectedDbs.some(db => ['CIA Liderler', 'TBMM', 'Wikidata PEP'].includes(db));
+                const hasYaptirim = selectedDbs.some(db => !['CIA Liderler', 'TBMM', 'Wikidata PEP'].includes(db));
+                html += '<div class="tabs"><button class="tab active" onclick="filterResults(\'all\', this)">Tümü</button>';
+                if (hasYaptirim) { html += '<button class="tab" onclick="filterResults(\'high\', this)">🔴 Yüksek Eşleşme</button>'; html += '<button class="tab" onclick="filterResults(\'medium\', this)">🟡 Orta Eşleşme</button>'; }
+                if (hasPEP) { html += '<button class="tab" onclick="filterResults(\'high\', this)">🔵 Yüksek Eşleşme</button>'; html += '<button class="tab" onclick="filterResults(\'medium\', this)">🔵 Orta Eşleşme</button>'; }
+                html += '<button class="tab" onclick="filterResults(\'low\', this)">🟢 Düşük Eşleşme</button>';
+                html += '</div><div id="filteredResults">';
+                data.eslesmeler.forEach((match) => {
+                    const isPEP = ['CIA Liderler', 'TBMM', 'Wikidata PEP'].includes(match.kaynak);
+                    let cardClass, tagClass, scoreColor;
+                    if (match.guven === 'high') {
+                        if (isPEP) { cardClass = 'pep-high'; tagClass = 'pep-high'; scoreColor = 'var(--pep-high)'; }
+                        else { cardClass = 'high'; tagClass = 'high'; scoreColor = 'var(--red)'; }
+                    } else if (match.guven === 'medium') {
+                        if (isPEP) { cardClass = 'pep-medium'; tagClass = 'pep-medium'; scoreColor = 'var(--pep-medium)'; }
+                        else { cardClass = 'medium'; tagClass = 'medium'; scoreColor = 'var(--yellow)'; }
+                    } else {
+                        cardClass = 'clean'; tagClass = 'low'; scoreColor = 'var(--green)';
+                    }
+                    html += `<div class="result-card ${cardClass}" data-risk="${match.guven}">`;
+                    html += `<div class="card-header"><div class="name">${escapeHtml(match.eslesen_isim)}<span class="risk-tag ${tagClass}">${match.risk}</span></div><div style="font-size:28px;font-weight:900;color:${scoreColor}">${match.skor}</div></div>`;
+                    html += `<div class="meta-grid">`;
+                    html += `<div class="meta-item"><div class="meta-label">Kaynak</div><div class="meta-value">${escapeHtml(match.kaynak)}</div></div>`;
+                    html += `<div class="meta-item"><div class="meta-label">Güven Seviyesi</div><div class="meta-value">${match.guven === 'high' ? 'Yüksek' : match.guven === 'medium' ? 'Orta' : 'Düşük'}</div></div>`;
+                    if (match.ek_bilgiler) {
+                        const ek = match.ek_bilgiler;
+                        if (ek.Type) html += `<div class="meta-item"><div class="meta-label">Tür</div><div class="meta-value">${escapeHtml(ek.Type)}</div></div>`;
+                        if (ek.Country) html += `<div class="meta-item"><div class="meta-label">Ülke</div><div class="meta-value">${escapeHtml(ek.Country)}</div></div>`;
+                        if (ek.Citizenship) html += `<div class="meta-item"><div class="meta-label">Vatandaşlık</div><div class="meta-value">${escapeHtml(ek.Citizenship)}</div></div>`;
+                        if (ek["Role 0"]) html += `<div class="meta-item"><div class="meta-label">Görev</div><div class="meta-value">${escapeHtml(ek["Role 0"])}</div></div>`;
+                        if (ek["Role 1"]) html += `<div class="meta-item"><div class="meta-label">Görev 2</div><div class="meta-value">${escapeHtml(ek["Role 1"])}</div></div>`;
+                        if (ek.BirthDate) html += `<div class="meta-item"><div class="meta-label">Doğum Tarihi</div><div class="meta-value">${escapeHtml(String(ek.BirthDate).replace('.0', ''))}</div></div>`;
+                        if (ek.BirthPlace) html += `<div class="meta-item"><div class="meta-label">Doğum Yeri</div><div class="meta-value">${escapeHtml(ek.BirthPlace)}</div></div>`;
+                        if (ek.Gender) html += `<div class="meta-item"><div class="meta-label">Cinsiyet</div><div class="meta-value">${escapeHtml(ek.Gender)}</div></div>`;
+                        if (ek.GENDER) html += `<div class="meta-item"><div class="meta-label">Cinsiyet</div><div class="meta-value">${escapeHtml(ek.GENDER)}</div></div>`;
+                        if (ek.NATIONALITY) html += `<div class="meta-item"><div class="meta-label">Uyruk</div><div class="meta-value">${escapeHtml(ek.NATIONALITY)}</div></div>`;
+                        if (ek.Nationality) html += `<div class="meta-item"><div class="meta-label">Uyruk</div><div class="meta-value">${escapeHtml(ek.Nationality)}</div></div>`;
+                        if (ek.Party) html += `<div class="meta-item"><div class="meta-label">Parti</div><div class="meta-value">${escapeHtml(ek.Party)}</div></div>`;
+                        if (ek.Organization) html += `<div class="meta-item"><div class="meta-label">Örgüt</div><div class="meta-value">${escapeHtml(ek.Organization)}</div></div>`;
+                        if (ek["Örgütü"]) html += `<div class="meta-item"><div class="meta-label">Örgüt</div><div class="meta-value">${escapeHtml(ek["Örgütü"])}</div></div>`;
+                        if (ek.List) html += `<div class="meta-item"><div class="meta-label">Liste</div><div class="meta-value">${escapeHtml(ek.List)}</div></div>`;
+                        if (ek.Alias) html += `<div class="meta-item"><div class="meta-label">Alias</div><div class="meta-value">${escapeHtml(ek.Alias)}</div></div>`;
+                    }
+                    html += `</div></div>`;
+                });
+                html += '</div>';
+            }
+            container.innerHTML = html;
+        }
+
+        function filterResults(level, btn) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.result-card').forEach(card => { card.style.display = (level === 'all') ? '' : (card.dataset.risk === level ? '' : 'none'); });
+        }
+
+        function clearAll() { document.getElementById('searchInput').value = ''; document.getElementById('resultsContainer').innerHTML = ''; document.getElementById('statSpeed').textContent = '-'; document.getElementById('statAccuracy').textContent = '-'; }
+
+        function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+    </script>
+</body>
+</html>
